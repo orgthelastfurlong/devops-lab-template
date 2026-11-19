@@ -22,6 +22,19 @@ test("live health does not require database", async () => {
   await app.close();
 });
 
+test("client events are accepted", async () => {
+  const app = buildApp();
+  const response = await app.inject({
+    method: "POST",
+    url: "/api/events",
+    payload: { name: "ui.test", level: "info", context: { ok: true } },
+  });
+  assert.equal(response.statusCode, 202);
+  assert.equal(response.json().accepted, true);
+  assert.ok(response.headers["x-request-id"]);
+  await app.close();
+});
+
 test(
   "items CRUD against postgres",
   { skip: !hasDatabase },

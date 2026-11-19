@@ -5,6 +5,12 @@
   "engines": {
     "node": ">=22"
   },
+  "pnpm": {
+    "overrides": {
+      "deepmerge-ts": "^8.0.0",
+      "effect": "3.22.1"
+    }
+  },
   "scripts": {
     "dev": "pnpm --parallel --filter @lab/web --filter @lab/api dev",
     "dev:web": "pnpm --filter @lab/web dev",

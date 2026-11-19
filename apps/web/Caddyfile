@@ -1,6 +1,30 @@
-:80 {
-	root * /srv
+{
+	admin off
+	persist_config off
+	auto_https off
+	log {
+		output stdout
+		format json
+		level INFO
+	}
+}
+
+:8080 {
 	encode gzip
+	root * /srv
 	try_files {path} /index.html
 	file_server
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		X-Frame-Options DENY
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		-Server
+	}
+
+	log {
+		output stdout
+		format json
+	}
 }
