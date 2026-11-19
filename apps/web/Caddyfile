@@ -21,6 +21,7 @@
 		X-Frame-Options DENY
 		Permissions-Policy "geolocation=(), microphone=(), camera=()"
 		-Server
+		-Via
 	}
 
 	log {
