@@ -27,6 +27,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @lab/shared build
+      - run: pnpm --filter @lab/api prisma:generate
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm --filter @lab/web build
