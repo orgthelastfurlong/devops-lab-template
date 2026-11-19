@@ -8,6 +8,8 @@ const release = process.env.RELEASE_SHA ?? "dev";
 export function buildApp() {
   const app = Fastify({
     logger: buildLoggerOptions(),
+    // Trust X-Forwarded-For from edge Caddy (itself only trusts Cloudflare).
+    trustProxy: true,
     requestIdHeader: "x-request-id",
     genReqId: (request) => requestIdFromHeaders(request.headers),
   });

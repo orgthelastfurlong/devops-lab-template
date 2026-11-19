@@ -27,7 +27,10 @@ export function buildLoggerOptions(): FastifyServerOptions["logger"] {
           method: request.method,
           url: request.url,
           host: request.headers.host,
-          remoteAddress: request.ip,
+          // Real visitor IP when trustProxy + CF-Connecting-IP path is configured.
+          clientIp: request.ip,
+          remoteAddress: request.raw.socket.remoteAddress,
+          cfConnectingIp: request.headers["cf-connecting-ip"],
           userAgent: request.headers["user-agent"],
         };
       },
