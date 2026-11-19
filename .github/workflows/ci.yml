@@ -26,9 +26,9 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @lab/shared build
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm --filter @lab/shared build
       - run: pnpm --filter @lab/web build
 
   test-api:
