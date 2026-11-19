@@ -1,0 +1,89 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck-build:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm --filter @lab/shared build
+      - run: pnpm --filter @lab/web build
+
+  test-api:
+    name: test-be
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.9-alpine
+        env:
+          POSTGRES_USER: lab
+          POSTGRES_PASSWORD: lab
+          POSTGRES_DB: lab
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lab -d lab"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://lab:lab@127.0.0.1:5432/lab?schema=public
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @lab/shared build
+      - run: pnpm --filter @lab/api prisma:generate
+      - name: migrate from empty database
+        run: pnpm --filter @lab/api prisma:migrate:deploy
+      - run: pnpm --filter @lab/api test
+      - name: reset and re-apply migrations
+        run: |
+          docker run --rm --network host postgres:16.9-alpine \
+            psql "postgresql://lab:lab@127.0.0.1:5432/lab" -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'
+          pnpm --filter @lab/api prisma:migrate:deploy
+
+  test-web:
+    name: test-fe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @lab/shared build
+      - run: pnpm --filter @lab/web test
+      - run: pnpm --filter @lab/web build

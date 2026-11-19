@@ -1,0 +1,4 @@
+/* Global reset lives mostly in App.css for this lab UI. */
+body {
+  margin: 0;
+}
